@@ -7,6 +7,8 @@ import spotutils
 import offset_index
 import multiprocessing
 
+N_PROCESS_AVAIL = len(os.sched_getaffinity(0))
+
 # *** LOAD DATA ***
 
 pos = numpy.loadtxt(sys.argv[1]+'_starpos.txt')
@@ -176,9 +178,9 @@ for k_it in range(12):
         theory = spotutils.postage_stamp(sed, filt, sca[k], pos[k,:], offsets, addInfo)
         thisterm = spotutils.chi2_postage_stamp(spotsObs[k,:,:], theory, fit_noise**2)
         lock.acquire()
-        try: mysum.value += thisterm
-        finally: lock.release()
-      with multiprocessing.Pool(processes=2) as pool: pool.map(wrapfunc, range(Nstar))
+        mysum.value += thisterm
+        lock.release()
+      with multiprocessing.Pool(processes=N_PROCESS_AVAIL) as pool: pool.map(wrapfunc, range(Nstar))
       nc2[kdp] = mysum.value
       #
       # multiprocessing part ends here
